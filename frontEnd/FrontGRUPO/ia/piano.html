@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎹 Piano Simples</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* =============================================
+       VARIÁVEIS E RESET
+    ============================================= */
+    :root {
+      --bg:        #0d0d0f;
+      --surface:   #16161a;
+      --gold:      #c9a84c;
+      --gold-light:#e8c97a;
+      --ivory:     #f5f0e8;
+      --ivory-dim: #d4cfc6;
+      --ebony:     #111114;
+      --accent:    #8b5cf6;
+      --white-key-w: clamp(36px, 5.5vw, 64px);
+      --black-key-w: clamp(22px, 3.3vw, 40px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--ivory);
+      font-family: 'Crimson Text', serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* fundo com textura de ruído */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* =============================================
+       CABEÇALHO
+    ============================================= */
+    header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: rgba(245,240,232,0.45);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* =============================================
+       PAINEL DE INFORMAÇÃO (nota + oitava)
+    ============================================= */
+    .info-panel {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .note-display {
+      background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05));
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 12px;
+      padding: 0.8rem 2rem;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .note-display .label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .note-display .value {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--gold-light);
+      min-height: 2.8rem;
+      transition: all 0.15s ease;
+    }
+
+    /* =============================================
+       SELETOR DE OITAVA
+    ============================================= */
+    .octave-control {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 0.5rem 1rem;
+    }
+
+    .octave-control span {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.45);
+    }
+
+    .octave-btn {
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.25);
+      color: var(--gold);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .octave-btn:hover { background: rgba(201,168,76,0.25); }
+
+    #octave-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: var(--gold-light);
+      min-width: 1rem;
+      text-align: center;
+    }
+
+    /* =============================================
+       PIANO WRAPPER
+    ============================================= */
+    .piano-wrapper {
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(180deg, #1a1008 0%, #0e0b06 100%);
+      border: 2px solid rgba(201,168,76,0.25);
+      border-radius: 16px 16px 20px 20px;
+      padding: 24px 28px 28px;
+      box-shadow:
+        0 0 60px rgba(0,0,0,0.8),
+        0 0 120px rgba(201,168,76,0.06),
+        inset 0 1px 0 rgba(201,168,76,0.15);
+    }
+
+    /* moldura decorativa interna */
+    .piano-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border: 1px solid rgba(201,168,76,0.08);
+      border-radius: 10px 10px 14px 14px;
+      pointer-events: none;
+    }
+
+    /* =============================================
+       TECLADO
+    ============================================= */
+    .keyboard {
+      position: relative;
+      display: flex;
+      user-select: none;
+    }
+
+    /* ---- Teclas brancas ---- */
+    .key-white {
+      position: relative;
+      width: var(--white-key-w);
+      height: clamp(120px, 18vw, 200px);
+      background: linear-gradient(180deg, var(--ivory) 0%, #e8e2d8 100%);
+      border: 1px solid #b8b0a0;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      cursor: pointer;
+      z-index: 1;
+      transition: background 0.06s, transform 0.06s, box-shadow 0.06s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 10px;
+    }
+
+    .key-white:not(:first-child) { margin-left: -1px; }
+
+    .key-white .key-label {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(0.55rem, 1vw, 0.72rem);
+      color: rgba(50,40,30,0.5);
+      pointer-events: none;
+    }
+
+    .key-white .shortcut {
+      font-size: clamp(0.45rem, 0.8vw, 0.6rem);
+      color: rgba(50,40,30,0.3);
+      margin-top: 2px;
+    }
+
+    .key-white:hover {
+      background: linear-gradient(180deg, #fffdf8 0%, #f0ece4 100%);
+    }
+
+    .key-white.active {
+      background: linear-gradient(180deg, #e8d9b8 0%, #c9a84c33 100%);
+      transform: translateY(3px);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4), inset 0 2px 4px rgba(201,168,76,0.2);
+    }
+
+    /* ---- Teclas pretas ---- */
+    .key-black {
+      position: absolute;
+      width: var(--black-key-w);
+      height: clamp(72px, 11vw, 125px);
+      background: linear-gradient(180deg, #2a2420 0%, var(--ebony) 100%);
+      border-radius: 0 0 6px 6px;
+      cursor: pointer;
+      z-index: 2;
+      top: 0;
+      transition: background 0.06s, transform 0.06s, box-shadow 0.06s;
+      box-shadow: 0 6px 10px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 6px;
+    }
+
+    .key-black .key-label {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(0.42rem, 0.75vw, 0.58rem);
+      color: rgba(255,255,255,0.25);
+      pointer-events: none;
+    }
+
+    .key-black .shortcut {
+      font-size: clamp(0.35rem, 0.6vw, 0.5rem);
+      color: rgba(255,255,255,0.15);
+      margin-top: 1px;
+    }
+
+    .key-black:hover {
+      background: linear-gradient(180deg, #3a332c 0%, #1a1510 100%);
+    }
+
+    .key-black.active {
+      background: linear-gradient(180deg, #c9a84c44 0%, #1a1510 100%);
+      transform: translateY(3px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.7), inset 0 2px 4px rgba(201,168,76,0.1);
+    }
+
+    /* =============================================
+       ONDAS VISUALIZADORAS
+    ============================================= */
+    .visualizer {
+      position: relative;
+      z-index: 1;
+      margin-top: 1.8rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      height: 50px;
+    }
+
+    .bar {
+      width: 4px;
+      border-radius: 2px 2px 0 0;
+      background: linear-gradient(180deg, var(--gold-light), var(--gold));
+      height: 4px;
+      transition: height 0.1s ease-out;
+      opacity: 0.6;
+    }
+
+    /* =============================================
+       LEGENDA DE TECLADO
+    ============================================= */
+    .keyboard-hint {
+      position: relative;
+      z-index: 1;
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: rgba(245,240,232,0.3);
+      letter-spacing: 0.1em;
+    }
+
+    /* =============================================
+       RIPPLE / PARTÍCULAS
+    ============================================= */
+    .ripple {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: rippleOut 0.6s ease-out forwards;
+      border: 2px solid var(--gold);
+      z-index: 999;
+    }
+    @keyframes rippleOut {
+      from { opacity: 0.7; transform: scale(0); }
+      to   { opacity: 0;   transform: scale(3); }
+    }
+
+    /* =============================================
+       RESPONSIVO
+    ============================================= */
+    @media (max-width: 600px) {
+      .piano-wrapper { padding: 14px 12px 18px; border-radius: 10px 10px 14px 14px; }
+      .info-panel { flex-direction: column; gap: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Piano Simples</h1>
+    <p>Toque com o mouse ou pelo teclado</p>
+  </header>
+
+  <!-- Painel: nota atual + controle de oitava -->
+  <div class="info-panel">
+    <div class="note-display">
+      <div class="label">Nota</div>
+      <div class="value" id="current-note">—</div>
+    </div>
+    <div class="octave-control">
+      <button class="octave-btn" id="oct-down">−</button>
+      <span>Oitava</span>
+      <span id="octave-val">4</span>
+      <button class="octave-btn" id="oct-up">+</button>
+    </div>
+  </div>
+
+  <!-- Teclado -->
+  <div class="piano-wrapper">
+    <div class="keyboard" id="keyboard"></div>
+  </div>
+
+  <!-- Visualizador de barras -->
+  <div class="visualizer" id="visualizer"></div>
+
+  <p class="keyboard-hint">A S D F G H J K L · W E T Y U O P · ↑↓ Oitava</p>
+
+<script>
+  /* =============================================
+     CONFIGURAÇÃO DAS TECLAS
+     Cada objeto: nota, tipo (white/black), atalho, offset da tecla preta (em px a partir da esquerda da oitava)
+  ============================================= */
+  const WHITE_NOTES = ['C','D','E','F','G','A','B'];
+  // Frequência base de C4 = 261.63 Hz
+  // Fórmula: freq = baseFreq * 2^(semitons/12)
+  const SEMITONES = { C:0, 'C#':1, D:2, 'D#':3, E:4, F:5, 'F#':6, G:7, 'G#':8, A:9, 'A#':10, B:11 };
+
+  // Layout de uma oitava: 7 brancas, 5 pretas
+  const OCTAVE_LAYOUT = [
+    { note:'C',  type:'white', key:'a' },
+    { note:'C#', type:'black', key:'w' },
+    { note:'D',  type:'white', key:'s' },
+    { note:'D#', type:'black', key:'e' },
+    { note:'E',  type:'white', key:'d' },
+    { note:'F',  type:'white', key:'f' },
+    { note:'F#', type:'black', key:'t' },
+    { note:'G',  type:'white', key:'g' },
+    { note:'G#', type:'black', key:'y' },
+    { note:'A',  type:'white', key:'h' },
+    { note:'A#', type:'black', key:'u' },
+    { note:'B',  type:'white', key:'j' },
+  ];
+
+  /* =============================================
+     ESTADO
+  ============================================= */
+  let octave = 4;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const activeOscillators = {}; // note+octave → { osc, gain }
+
+  /* =============================================
+     CONSTRUÇÃO DO TECLADO
+  ============================================= */
+  const keyboardEl = document.getElementById('keyboard');
+  const whiteKeyEls = [];
+  const blackKeyEls = [];
+
+  // Calcula posição das teclas pretas
+  // Índice de teclas brancas: C=0,D=1,E=2,F=3,G=4,A=5,B=6
+  const BLACK_POSITIONS = { 'C#': 0, 'D#': 1, 'F#': 3, 'G#': 4, 'A#': 5 };
+
+  function buildKeyboard() {
+    keyboardEl.innerHTML = '';
+    whiteKeyEls.length = 0;
+    blackKeyEls.length = 0;
+
+    // Cria wrapper para posicionamento relativo
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.style.display = 'flex';
+
+    // Calcula largura das teclas brancas para posicionar as pretas
+    const wkStyle = getComputedStyle(document.documentElement);
+    // Usa variável CSS; fallback 52px
+    const wkW = parseInt(wkStyle.getPropertyValue('--white-key-w')) || 52;
+    const bkW = parseInt(wkStyle.getPropertyValue('--black-key-w')) || 32;
+
+    OCTAVE_LAYOUT.forEach(({ note, type, key }) => {
+      const el = document.createElement('div');
+      el.classList.add(type === 'white' ? 'key-white' : 'key-black');
+      el.dataset.note = note;
+      el.dataset.key  = key;
+
+      // Label e atalho
+      const lbl = document.createElement('span');
+      lbl.className = 'key-label';
+      lbl.textContent = note;
+      el.appendChild(lbl);
+
+      const sc = document.createElement('span');
+      sc.className = 'shortcut';
+      sc.textContent = key.toUpperCase();
+      el.appendChild(sc);
+
+      if (type === 'white') {
+        wrapper.appendChild(el);
+        whiteKeyEls.push(el);
+      } else {
+        blackKeyEls.push({ el, note });
+      }
+    });
+
+    // Posiciona teclas pretas DEPOIS de construir as brancas
+    keyboardEl.appendChild(wrapper);
+
+    // Precisamos do DOM para calcular posições reais
+    requestAnimationFrame(() => {
+      const whites = wrapper.querySelectorAll('.key-white');
+      const whitePositions = {};
+      let wi = 0;
+      OCTAVE_LAYOUT.forEach(({ note, type }) => {
+        if (type === 'white') {
+          whitePositions[note] = whites[wi].offsetLeft;
+          wi++;
+        }
+      });
+
+      // Mapa: tecla preta → tecla branca à esquerda
+      const BLACK_LEFT = { 'C#':'C', 'D#':'D', 'F#':'F', 'G#':'G', 'A#':'A' };
+
+      blackKeyEls.forEach(({ el, note }) => {
+        const leftWhite = BLACK_LEFT[note];
+        const leftPos = whitePositions[leftWhite];
+        const whiteW = whites[0].offsetWidth;
+        const blackW = el.offsetWidth || bkW;
+        // Centraliza entre a tecla branca da esquerda e a próxima
+        el.style.left = (leftPos + whiteW - blackW / 2) + 'px';
+        wrapper.appendChild(el);
+      });
+    });
+
+    // Eventos de mouse/touch para TODAS as teclas
+    wrapper.querySelectorAll('.key-white, .key-black').forEach(el => {
+      el.addEventListener('mousedown',  e => { e.preventDefault(); playNote(el.dataset.note, el); });
+      el.addEventListener('mouseenter', e => { if (e.buttons === 1) playNote(el.dataset.note, el); });
+      el.addEventListener('mouseup',    () => stopNote(el.dataset.note, el));
+      el.addEventListener('mouseleave', () => stopNote(el.dataset.note, el));
+      el.addEventListener('touchstart', e => { e.preventDefault(); playNote(el.dataset.note, el); }, { passive: false });
+      el.addEventListener('touchend',   () => stopNote(el.dataset.note, el));
+    });
+  }
+
+  /* =============================================
+     ÁUDIO: TOCA NOTA
+  ============================================= */
+  function getFrequency(note, oct) {
+    // C4 = 261.63 Hz; semitons a partir de C4
+    const semitonsFromC4 = (oct - 4) * 12 + SEMITONES[note];
+    return 261.63 * Math.pow(2, semitonsFromC4 / 12);
+  }
+
+  function playNote(note, el) {
+    const id = note + octave;
+    if (activeOscillators[id]) return; // já tocando
+
+    // Desbloqueia contexto (política de autoplay)
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const freq = getFrequency(note, octave);
+
+    // Oscilador principal (tom)
+    const osc = audioCtx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+    // Harmônico suave
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(freq * 2, audioCtx.currentTime);
+
+    // Envelope ADSR simplificado
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.1);
+
+    const gainNode2 = audioCtx.createGain();
+    gainNode2.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+    // Reverb simples (convolução com ruído)
+    const reverb = createReverb();
+
+    osc.connect(gainNode);
+    gainNode.connect(reverb);
+    gainNode.connect(audioCtx.destination);
+
+    osc2.connect(gainNode2);
+    gainNode2.connect(audioCtx.destination);
+
+    osc.start();
+    osc2.start();
+
+    activeOscillators[id] = { osc, osc2, gainNode, gainNode2 };
+
+    // UI
+    el.classList.add('active');
+    document.getElementById('current-note').textContent = note + octave;
+    animateBars();
+  }
+
+  function stopNote(note, el) {
+    const id = note + octave;
+    const active = activeOscillators[id];
+    if (!active) return;
+
+    const { osc, osc2, gainNode, gainNode2 } = active;
+    // Release suave
+    gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(gainNode.gain.value, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+    gainNode2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+
+    setTimeout(() => { try { osc.stop(); osc2.stop(); } catch(e){} }, 450);
+    delete activeOscillators[id];
+
+    el.classList.remove('active');
+    document.getElementById('current-note').textContent = '—';
+  }
+
+  /* Cria reverb sintético via ruído branco */
+  function createReverb() {
+    const convolver = audioCtx.createConvolver();
+    const rate = audioCtx.sampleRate;
+    const length = rate * 1.5;
+    const impulse = audioCtx.createBuffer(2, length, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 3);
+      }
+    }
+    convolver.buffer = impulse;
+    const mix = audioCtx.createGain();
+    mix.gain.value = 0.15;
+    convolver.connect(mix);
+    mix.connect(audioCtx.destination);
+    return convolver;
+  }
+
+  /* =============================================
+     VISUALIZADOR
+  ============================================= */
+  const vizEl = document.getElementById('visualizer');
+  const NUM_BARS = 24;
+  for (let i = 0; i < NUM_BARS; i++) {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    vizEl.appendChild(b);
+  }
+  const bars = vizEl.querySelectorAll('.bar');
+
+  function animateBars() {
+    bars.forEach(b => {
+      const h = Math.random() * 44 + 6;
+      b.style.height = h + 'px';
+      b.style.opacity = (0.4 + Math.random() * 0.6).toFixed(2);
+    });
+    if (Object.keys(activeOscillators).length > 0) {
+      requestAnimationFrame(animateBars);
+    } else {
+      bars.forEach(b => { b.style.height = '4px'; b.style.opacity = '0.2'; });
+    }
+  }
+
+  /* =============================================
+     TECLADO FÍSICO
+  ============================================= */
+  const KEY_MAP = {};
+  OCTAVE_LAYOUT.forEach(({ note, key }) => { KEY_MAP[key] = note; });
+
+  document.addEventListener('keydown', e => {
+    if (e.repeat) return;
+    // Controle de oitava
+    if (e.key === 'ArrowUp')   { changeOctave(1);  return; }
+    if (e.key === 'ArrowDown') { changeOctave(-1); return; }
+
+    const note = KEY_MAP[e.key.toLowerCase()];
+    if (!note) return;
+    const el = document.querySelector(`[data-note="${note}"]`);
+    if (el) playNote(note, el);
+  });
+
+  document.addEventListener('keyup', e => {
+    const note = KEY_MAP[e.key.toLowerCase()];
+    if (!note) return;
+    const el = document.querySelector(`[data-note="${note}"]`);
+    if (el) stopNote(note, el);
+  });
+
+  /* =============================================
+     CONTROLE DE OITAVA
+  ============================================= */
+  function changeOctave(dir) {
+    octave = Math.min(7, Math.max(2, octave + dir));
+    document.getElementById('octave-val').textContent = octave;
+  }
+
+  document.getElementById('oct-up').addEventListener('click',   () => changeOctave(1));
+  document.getElementById('oct-down').addEventListener('click', () => changeOctave(-1));
+
+  /* =============================================
+     INICIALIZAÇÃO
+  ============================================= */
+  buildKeyboard();
+  window.addEventListener('resize', buildKeyboard);
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+    "pedido": {
+        "id_pedido": 1,
+        "id_cliente": 1042,
+        "data_pedido": "2026-04-01",
+        "status": "em_transporte",
+        "valor_total": 559.80,
+        "valor_frete": 19.90,
+        "metodo_pagamento": "Pix",
+        "transportadora": "Correios",
+        "previsao_entrega": "2026-04-05",
+        "entregue": false,
+        "produtos": [
+            "Controle Xbox Series",
+            "Headset HyperX Cloud II"
+        ]
+    }
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credenciamento de Evento</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Cadastro de credenciamento</h1>
+
+    <!-- Botão modo escuro -->
+    <button class="dark-mode-toggle" id="darkModeToggle">🌙 Modo Escuro</button>
+
+    <!-- Formulário -->
+    <div class="formulario">
+        <form id="formulario">
+
+            <label>Nome Completo</label>
+            <input type="text" id="nome" placeholder="Digite seu nome completo">
+
+            <label>E-mail</label>
+            <input type="email" id="email" placeholder="Digite seu email">
+
+            <label>Telefone</label>
+            <input type="tel" id="telefone" placeholder="Digite seu telefone">
+
+            <label>Empresa</label>
+            <input type="text" id="empresa" placeholder="Nome da empresa">
+
+            <label>Categoria</label>
+            <select id="categoria">
+                <option value="">Selecione uma Categoria</option>
+                <option value="VIP">VIP</option>
+                <option value="Palestrante">Palestrante</option>
+                <option value="Patrocinador">Patrocinador</option>
+                <option value="Imprensa">Imprensa</option>
+                <option value="Convidado">Convidado</option>
+            </select>
+
+            <button type="submit" class="btn-submit">Confirmar presença</button>
+
+        </form>
+    </div>
+
+    <!-- Lista -->
+    <div class="lista">
+        <h2>Lista de presença</h2>
+        <ul class="list" id="list">
+            <p>Nenhum convidado cadastrado ainda</p>
+            <p>Os convidados aparecerão aqui após cadastrados</p>
+        </ul>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

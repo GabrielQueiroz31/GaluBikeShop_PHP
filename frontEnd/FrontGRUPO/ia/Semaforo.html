@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚦 Semáforo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* =============================================
+       VARIÁVEIS
+    ============================================= */
+    :root {
+      --bg:       #0a0c10;
+      --surface:  #12151c;
+      --border:   rgba(255,255,255,0.07);
+      --red:      #ff3b30;
+      --yellow:   #ffcc00;
+      --green:    #34c759;
+      --red-dim:    rgba(255,59,48,0.12);
+      --yellow-dim: rgba(255,204,0,0.12);
+      --green-dim:  rgba(52,199,89,0.12);
+      --text:     #e8eaf0;
+      --muted:    rgba(232,234,240,0.35);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem 1rem;
+    }
+
+    /* Grade de fundo */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* =============================================
+       TÍTULO
+    ============================================= */
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-align: center;
+    }
+
+    h1 span { color: var(--muted); font-weight: 400; }
+
+    /* =============================================
+       CENA: RUA + POSTE
+    ============================================= */
+    .scene {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Poste vertical */
+    .pole {
+      width: 14px;
+      height: 80px;
+      background: linear-gradient(90deg, #2a2e38, #3a3f4d, #2a2e38);
+      border-radius: 4px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Caixa do semáforo */
+    .traffic-light {
+      background: linear-gradient(180deg, #1c2030 0%, #141824 100%);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      z-index: 2;
+    }
+
+    /* Parafusos decorativos */
+    .traffic-light::before,
+    .traffic-light::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2a2e38;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .traffic-light::before { top: 10px; left: 10px; }
+    .traffic-light::after  { top: 10px; right: 10px; }
+
+    /* ---- Lâmpada ---- */
+    .lamp {
+      width: clamp(70px, 14vw, 100px);
+      height: clamp(70px, 14vw, 100px);
+      border-radius: 50%;
+      position: relative;
+      transition: background 0.3s, box-shadow 0.3s;
+      cursor: default;
+    }
+
+    /* Estado desligado (base escura) */
+    .lamp.red    { background: var(--red-dim);    border: 2px solid rgba(255,59,48,0.2); }
+    .lamp.yellow { background: var(--yellow-dim); border: 2px solid rgba(255,204,0,0.2); }
+    .lamp.green  { background: var(--green-dim);  border: 2px solid rgba(52,199,89,0.2); }
+
+    /* Estado ligado */
+    .lamp.red.on {
+      background: radial-gradient(circle at 35% 35%, #ff6b63, var(--red));
+      border-color: var(--red);
+      box-shadow: 0 0 30px var(--red), 0 0 60px rgba(255,59,48,0.4), inset 0 2px 4px rgba(255,255,255,0.2);
+      animation: pulse-red 1s ease-in-out infinite;
+    }
+    .lamp.yellow.on {
+      background: radial-gradient(circle at 35% 35%, #ffe566, var(--yellow));
+      border-color: var(--yellow);
+      box-shadow: 0 0 30px var(--yellow), 0 0 60px rgba(255,204,0,0.4), inset 0 2px 4px rgba(255,255,255,0.2);
+    }
+    .lamp.green.on {
+      background: radial-gradient(circle at 35% 35%, #65d985, var(--green));
+      border-color: var(--green);
+      box-shadow: 0 0 30px var(--green), 0 0 60px rgba(52,199,89,0.4), inset 0 2px 4px rgba(255,255,255,0.2);
+    }
+
+    /* blink amarelo */
+    .lamp.yellow.blink {
+      animation: blink-yellow 0.6s step-start infinite;
+    }
+
+    @keyframes pulse-red {
+      0%,100% { box-shadow: 0 0 30px var(--red), 0 0 60px rgba(255,59,48,0.4); }
+      50%      { box-shadow: 0 0 50px var(--red), 0 0 90px rgba(255,59,48,0.6); }
+    }
+
+    @keyframes blink-yellow {
+      0%,49%  { background: radial-gradient(circle at 35% 35%, #ffe566, var(--yellow)); box-shadow: 0 0 30px var(--yellow), 0 0 60px rgba(255,204,0,0.4); }
+      50%,100%{ background: var(--yellow-dim); box-shadow: none; }
+    }
+
+    /* reflexo interno */
+    .lamp::after {
+      content: '';
+      position: absolute;
+      top: 14%;
+      left: 20%;
+      width: 28%;
+      height: 20%;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* =============================================
+       PAINEL DE CONTROLE
+    ============================================= */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      width: min(400px, 92vw);
+    }
+
+    /* Status + contador */
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #555;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    .timer-box {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      min-width: 3rem;
+      text-align: right;
+    }
+
+    /* Barra de progresso */
+    .progress-track {
+      height: 6px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s linear, background 0.3s;
+      width: 100%;
+    }
+
+    /* Descrição do estado */
+    .state-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* =============================================
+       BOTÕES DE CONTROLE
+    ============================================= */
+    .controls {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .btn:hover { background: rgba(255,255,255,0.09); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0); }
+
+    .btn.primary {
+      background: rgba(52,199,89,0.15);
+      border-color: rgba(52,199,89,0.35);
+      color: var(--green);
+    }
+    .btn.primary:hover { background: rgba(52,199,89,0.25); }
+
+    .btn.danger {
+      background: rgba(255,59,48,0.12);
+      border-color: rgba(255,59,48,0.3);
+      color: var(--red);
+    }
+    .btn.danger:hover { background: rgba(255,59,48,0.22); }
+
+    /* =============================================
+       CONTROLE DE VELOCIDADE
+    ============================================= */
+    .speed-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .speed-row input[type=range] {
+      flex: 1;
+      accent-color: var(--yellow);
+      cursor: pointer;
+    }
+
+    /* =============================================
+       MODO MANUAL
+    ============================================= */
+    .manual-row {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .btn-manual {
+      flex: 1;
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.06);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-manual.red    { background: var(--red-dim);    color: var(--red);    border-color: rgba(255,59,48,0.25); }
+    .btn-manual.yellow { background: var(--yellow-dim); color: var(--yellow); border-color: rgba(255,204,0,0.25); }
+    .btn-manual.green  { background: var(--green-dim);  color: var(--green);  border-color: rgba(52,199,89,0.25); }
+
+    .btn-manual:hover { filter: brightness(1.4); transform: translateY(-1px); }
+
+    /* =============================================
+       RODAPÉ DE MODO
+    ============================================= */
+    .mode-label {
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* =============================================
+       RESPONSIVO
+    ============================================= */
+    @media (max-width: 480px) {
+      .controls { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Semáforo <span>/ Simulador</span></h1>
+
+  <!-- Cena visual -->
+  <div class="scene">
+    <div class="traffic-light">
+      <div class="lamp red"    id="lamp-red"></div>
+      <div class="lamp yellow" id="lamp-yellow"></div>
+      <div class="lamp green"  id="lamp-green"></div>
+    </div>
+    <div class="pole"></div>
+  </div>
+
+  <!-- Painel -->
+  <div class="panel">
+
+    <!-- Status + contador regressivo -->
+    <div class="status-row">
+      <div class="status-badge">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">AGUARDANDO</span>
+      </div>
+      <div class="timer-box" id="timer">—</div>
+    </div>
+
+    <!-- Barra de progresso -->
+    <div class="progress-track">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="state-desc" id="state-desc">Pressione Iniciar para começar</div>
+
+    <!-- Botões principais -->
+    <div class="controls">
+      <button class="btn primary" id="btn-start">▶ Iniciar</button>
+      <button class="btn"         id="btn-pause">⏸ Pausar</button>
+      <button class="btn danger"  id="btn-reset">↺ Resetar</button>
+    </div>
+
+    <!-- Velocidade -->
+    <div class="speed-row">
+      <span>VELOCIDADE</span>
+      <input type="range" id="speed-slider" min="0.5" max="3" step="0.5" value="1" />
+      <span id="speed-label">1×</span>
+    </div>
+
+    <!-- Modo manual -->
+    <div class="mode-label">Controle Manual</div>
+    <div class="manual-row">
+      <button class="btn-manual red"    onclick="manualSet('red')">VERMELHO</button>
+      <button class="btn-manual yellow" onclick="manualSet('yellow')">AMARELO</button>
+      <button class="btn-manual green"  onclick="manualSet('green')">VERDE</button>
+    </div>
+  </div>
+
+<script>
+  /* =============================================
+     CONFIGURAÇÃO DOS ESTADOS
+     durations em ms (base 1×)
+  ============================================= */
+  const STATES = [
+    { id: 'red',    duration: 5000, label: 'PARE — Aguarde',          desc: 'Proibida a passagem de veículos' },
+    { id: 'yellow', duration: 2000, label: 'ATENÇÃO — Prepare-se',    desc: 'Reduzir velocidade' },
+    { id: 'green',  duration: 5000, label: 'SIGA — Passagem liberada', desc: 'Fluxo permitido' },
+  ];
+
+  const COLORS = {
+    red:    { dot: '#ff3b30', bar: '#ff3b30', text: '#ff3b30' },
+    yellow: { dot: '#ffcc00', bar: '#ffcc00', text: '#ffcc00' },
+    green:  { dot: '#34c759', bar: '#34c759', text: '#34c759' },
+  };
+
+  /* =============================================
+     ESTADO DA APLICAÇÃO
+  ============================================= */
+  let stateIndex   = 0;   // índice atual em STATES
+  let running      = false;
+  let manualMode   = false;
+  let speed        = 1;
+  let timerId      = null;
+  let elapsed      = 0;   // ms decorridos no estado atual
+  let lastTick     = null;
+  let rafId        = null;
+
+  /* =============================================
+     REFERÊNCIAS
+  ============================================= */
+  const lampRed    = document.getElementById('lamp-red');
+  const lampYellow = document.getElementById('lamp-yellow');
+  const lampGreen  = document.getElementById('lamp-green');
+  const statusText = document.getElementById('status-text');
+  const statusDot  = document.getElementById('status-dot');
+  const timerEl    = document.getElementById('timer');
+  const progressEl = document.getElementById('progress-bar');
+  const stateDesc  = document.getElementById('state-desc');
+  const btnStart   = document.getElementById('btn-start');
+  const btnPause   = document.getElementById('btn-pause');
+  const btnReset   = document.getElementById('btn-reset');
+  const speedSlider= document.getElementById('speed-slider');
+  const speedLabel = document.getElementById('speed-label');
+
+  /* =============================================
+     RENDERIZAÇÃO DO ESTADO
+  ============================================= */
+  function render(stateId) {
+    // Lâmpadas
+    lampRed.classList.toggle('on',    stateId === 'red');
+    lampYellow.classList.toggle('on', stateId === 'yellow');
+    lampGreen.classList.toggle('on',  stateId === 'green');
+    lampYellow.classList.remove('blink');
+
+    // Cores do painel
+    const c = COLORS[stateId];
+    statusDot.style.background  = c.dot;
+    statusDot.style.boxShadow   = `0 0 8px ${c.dot}`;
+    progressEl.style.background = c.bar;
+    statusText.style.color      = c.text;
+
+    // Texto
+    const st = STATES.find(s => s.id === stateId);
+    statusText.textContent = st.label;
+    stateDesc.textContent  = st.desc;
+  }
+
+  /* =============================================
+     LOOP PRINCIPAL (requestAnimationFrame)
+  ============================================= */
+  function tick(ts) {
+    if (!running) return;
+
+    if (lastTick !== null) {
+      const delta = (ts - lastTick) * speed;
+      elapsed += delta;
+    }
+    lastTick = ts;
+
+    const current  = STATES[stateIndex];
+    const duration = current.duration;
+    const remaining = Math.max(0, duration - elapsed);
+
+    // Atualiza contador
+    timerEl.textContent = Math.ceil(remaining / 1000) + 's';
+
+    // Barra de progresso
+    const pct = (remaining / duration) * 100;
+    progressEl.style.width = pct + '%';
+
+    // Amarelo piscando nos últimos 500ms do amarelo
+    if (current.id === 'yellow' && remaining < 500) {
+      lampYellow.classList.add('blink');
+    }
+
+    // Avança estado
+    if (elapsed >= duration) {
+      elapsed = 0;
+      stateIndex = (stateIndex + 1) % STATES.length;
+      render(STATES[stateIndex].id);
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  /* =============================================
+     CONTROLES
+  ============================================= */
+  function start() {
+    if (running) return;
+    running   = true;
+    manualMode = false;
+    lastTick  = null;
+    render(STATES[stateIndex].id);
+    rafId = requestAnimationFrame(tick);
+    btnStart.textContent = '▶ Rodando...';
+    btnStart.disabled    = true;
+    btnPause.disabled    = false;
+  }
+
+  function pause() {
+    running = false;
+    cancelAnimationFrame(rafId);
+    btnStart.textContent = '▶ Continuar';
+    btnStart.disabled    = false;
+    btnPause.textContent = '▶ Retomar';
+    btnPause.disabled    = true;
+
+    // Reativa start como "continuar"
+    btnStart.onclick = function() {
+      running   = true;
+      lastTick  = null;
+      rafId = requestAnimationFrame(tick);
+      btnStart.textContent = '▶ Rodando...';
+      btnStart.disabled    = true;
+      btnPause.textContent = '⏸ Pausar';
+      btnPause.onclick     = pause;
+      btnPause.disabled    = false;
+    };
+  }
+
+  function reset() {
+    running    = false;
+    manualMode = false;
+    stateIndex = 0;
+    elapsed    = 0;
+    lastTick   = null;
+    cancelAnimationFrame(rafId);
+
+    // Reset UI
+    lampRed.classList.remove('on');
+    lampYellow.classList.remove('on','blink');
+    lampGreen.classList.remove('on');
+    statusText.textContent = 'AGUARDANDO';
+    statusText.style.color = '';
+    statusDot.style.background = '#555';
+    statusDot.style.boxShadow  = 'none';
+    timerEl.textContent        = '—';
+    progressEl.style.width     = '100%';
+    progressEl.style.background= 'rgba(255,255,255,0.07)';
+    stateDesc.textContent      = 'Pressione Iniciar para começar';
+
+    btnStart.textContent = '▶ Iniciar';
+    btnStart.disabled    = false;
+    btnStart.onclick     = start;
+    btnPause.textContent = '⏸ Pausar';
+    btnPause.disabled    = false;
+    btnPause.onclick     = pause;
+  }
+
+  function manualSet(stateId) {
+    running    = false;
+    manualMode = true;
+    cancelAnimationFrame(rafId);
+    stateIndex = STATES.findIndex(s => s.id === stateId);
+    elapsed    = 0;
+    render(stateId);
+    timerEl.textContent      = '—';
+    progressEl.style.width   = '100%';
+    btnStart.textContent     = '▶ Iniciar';
+    btnStart.disabled        = false;
+    btnStart.onclick         = start;
+    btnPause.textContent     = '⏸ Pausar';
+    btnPause.disabled        = false;
+    btnPause.onclick         = pause;
+  }
+
+  /* =============================================
+     VELOCIDADE
+  ============================================= */
+  speedSlider.addEventListener('input', () => {
+    speed = parseFloat(speedSlider.value);
+    speedLabel.textContent = speed + '×';
+  });
+
+  /* =============================================
+     LISTENERS INICIAIS
+  ============================================= */
+  btnStart.addEventListener('click', start);
+  btnPause.addEventListener('click', pause);
+  btnReset.addEventListener('click', reset);
+</script>
+</body>
+</html>

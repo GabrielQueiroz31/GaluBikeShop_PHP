@@ -1,0 +1,214 @@
+/* === VARIÁVEIS === */
+:root {
+    --bg: #0f0f13;
+    --surface: #1a1a24;
+    --surface2: #22223a;
+    --accent: #7c6af7;
+    --accent-hover: #9b8fff;
+    --danger: #f75a5a;
+    --danger-hover: #ff7a7a;
+    --text: #e8e8f0;
+    --text-muted: #7a7a9a;
+    --radius: 14px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* === RESET & BASE === */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg);
+    background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(124,106,247,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(247,90,90,0.08) 0%, transparent 50%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    padding: 24px;
+}
+
+/* === CONTAINER === */
+.container {
+    width: 100%;
+    max-width: 520px;
+    background: var(--surface);
+    border-radius: 24px;
+    padding: 36px 32px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* === HEADER === */
+header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+}
+
+h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+#contador {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: var(--surface2);
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-weight: 500;
+}
+
+/* === INPUT AREA === */
+.input-area {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#tarefa {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#tarefa::placeholder {
+    color: var(--text-muted);
+}
+
+#tarefa:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,106,247,0.2);
+}
+
+#btnEnviar {
+    width: 52px;
+    height: 52px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1.6rem;
+    font-weight: 300;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(124,106,247,0.3);
+}
+
+#btnEnviar:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 6px 20px rgba(124,106,247,0.45);
+}
+
+#btnEnviar:active {
+    transform: scale(0.94);
+}
+
+/* === LISTA === */
+#lista {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    animation: entrar 0.25s ease forwards;
+    transition: background 0.2s;
+}
+
+li:hover {
+    background: #28283e;
+}
+
+li span {
+    flex: 1;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: color 0.2s, text-decoration 0.2s;
+}
+
+li.concluida span {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+@keyframes entrar {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === BOTÃO REMOVER === */
+.btnRemove {
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid rgba(247,90,90,0.3);
+    font-size: 0.8rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+}
+
+.btnRemove:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
+
+/* === DICA VAZIA === */
+.dica {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    margin-top: 20px;
+    transition: opacity 0.3s;
+}
+
+.dica.oculta {
+    opacity: 0;
+    pointer-events: none;
+}

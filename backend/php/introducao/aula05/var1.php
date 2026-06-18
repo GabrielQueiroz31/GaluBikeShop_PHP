@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <?php
+    $funcionarios = 40;
+
+    if ($funcionarios >= 50) {
+        echo "Empresa de médio porte";
+    } else {
+        echo "Empresa de pequeno porte";
+    }
+    ?>
+
+</body>
+</html>
+    

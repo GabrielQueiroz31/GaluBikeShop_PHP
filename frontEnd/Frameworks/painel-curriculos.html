@@ -1,0 +1,120 @@
+<div class="container">
+  <h2>{{ curriculo.id ? 'Editar Currículo' : 'Cadastrar Currículo' }}</h2>
+
+  <section class="box">
+    <form>
+      <div class="campo">
+        <label>Nome do Candidato</label>
+        <input type="text" [(ngModel)]="curriculo.candidato" name="candidato" placeholder="Nome completo" />
+      </div>
+
+      <div class="campo">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="curriculo.email" name="email" placeholder="email@example.com" />
+      </div>
+
+      <div class="campo">
+        <label>Telefone</label>
+        <input type="text" [(ngModel)]="curriculo.telefone" name="telefone" placeholder="(11) 98765-4321" />
+      </div>
+
+      <div class="campo">
+        <label>Formação Acadêmica</label>
+        <input type="text" [(ngModel)]="curriculo.formacao" name="formacao" placeholder="Ex: Engenharia de Software" />
+      </div>
+
+      <div class="campo">
+        <label>Universidade</label>
+        <input type="text" [(ngModel)]="curriculo.universidade" name="universidade" placeholder="Ex: USP" />
+      </div>
+
+      <div class="campo">
+        <label>Ano de Formação</label>
+        <input type="number" [(ngModel)]="curriculo.anoFormacao" name="anoFormacao" placeholder="2020" />
+      </div>
+
+      <div class="campo">
+        <label>Experiência Profissional</label>
+        <input type="text" [(ngModel)]="curriculo.experiencia" name="experiencia" placeholder="Descreva sua experiência" />
+      </div>
+
+      <div class="campo">
+        <label>Habilidades</label>
+        <input type="text" [(ngModel)]="curriculo.habilidades" name="habilidades" placeholder="Ex: JavaScript, Angular, ..." />
+      </div>
+
+      <div class="botoes">
+        <!-- Cadastrar: habilitado só quando NÃO tem currículo selecionado (id vazio) -->
+        <button
+          type="button"
+          class="btn criar"
+          (click)="cadastrarCurriculo()"
+          [disabled]="curriculo.id !== ''"
+        >
+          Cadastrar
+        </button>
+
+        <!-- Atualizar: habilitado só quando TEM currículo selecionado (id preenchido) -->
+        <button
+          type="button"
+          class="btn atualizar"
+          (click)="atualizarCurriculo(curriculo.id)"
+          [disabled]="curriculo.id === ''"
+        >
+          Atualizar
+        </button>
+
+        <!-- Excluir: habilitado só quando TEM currículo selecionado -->
+        <button
+          type="button"
+          class="btn deletar"
+          (click)="excluirCurriculo(curriculo.id)"
+          [disabled]="curriculo.id === ''"
+        >
+          Excluir
+        </button>
+
+        <button
+          type="button"
+          class="btn limpar"
+          (click)="limparFormulario()"
+        >
+          Limpar
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="listar-curriculos">
+    <h3>Currículos Cadastrados</h3>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Candidato</th>
+          <th>Email</th>
+          <th>Formação</th>
+          <th>Universidade</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of curriculos; track item.id) {
+          <tr>
+            <td>{{ item.id }}</td>
+            <td>{{ item.candidato }}</td>
+            <td>{{ item.email }}</td>
+            <td>{{ item.formacao }}</td>
+            <td>{{ item.universidade }}</td>
+            <td>
+              <button type="button" (click)="selecionarCurriculo(item)">
+                Editar
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+</div>

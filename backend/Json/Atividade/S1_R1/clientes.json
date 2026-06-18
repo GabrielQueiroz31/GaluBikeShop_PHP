@@ -1,0 +1,18 @@
+{
+    "cliente": {
+        "id_cliente": 1042,
+        "nome_completo": "Ana Paula Ferreira",
+        "cpf": "321.654.987-00",
+        "data_nascimento": "1995-08-14",
+        "email": "ana.ferreira@email.com",
+        "telefone": "(19) 99234-5678",
+        "endereco": {
+            "cidade": "Americana",
+            "estado": "SP",
+            "cep": "13460-000"
+        },
+        "total_pedidos": 17,
+        "ativo": true,
+        "interesses": ["Games", "Periféricos"]
+    }
+}

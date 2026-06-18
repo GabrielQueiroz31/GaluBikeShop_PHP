@@ -1,0 +1,15 @@
+node_modules/
+.angular/
+.dart_tool/
+build/
+.gradle/
+.idea/
+.next/
+dist/
+coverage/
+vendor/
+.pub-cache/
+*.log
+*.tmp
+CursoChatGPT/
+**/__pycache__/

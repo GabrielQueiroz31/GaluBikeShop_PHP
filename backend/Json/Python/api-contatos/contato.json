@@ -1,0 +1,16 @@
+{
+    "alunos":
+    [
+        {
+            "nome":"Enzo Basani",
+            "telefone":"19996335291"
+        }
+    ],
+    "professores":
+    [
+        {
+            "nome":"Jorge",
+            "telefone":"19993332123"
+        }
+    ]
+}

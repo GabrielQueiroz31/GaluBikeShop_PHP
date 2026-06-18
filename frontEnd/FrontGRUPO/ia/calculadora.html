@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧮 Calculadora</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* =============================================
+       VARIÁVEIS
+    ============================================= */
+    :root {
+      --bg:        #f0ede8;
+      --surface:   #e8e4de;
+      --calc-bg:   #2b2926;
+      --display-bg:#1c1a18;
+      --num:       #3a3530;
+      --num-hover: #4a453f;
+      --op:        #c17f3a;
+      --op-hover:  #d4913f;
+      --special:   #6b6158;
+      --special-hov:#7d7268;
+      --eq:        #e07b3a;
+      --eq-hover:  #f08040;
+      --text-disp: #f5f2ed;
+      --text-btn:  #f0ece6;
+      --text-muted:#9e9890;
+      --shadow:    rgba(0,0,0,0.35);
+      --radius:    14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      padding: 1.5rem;
+    }
+
+    /* Textura de papel sutil */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* =============================================
+       CONTAINER DA CALCULADORA
+    ============================================= */
+    .calc-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .calc-title {
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #9e9890;
+    }
+
+    .calculator {
+      background: var(--calc-bg);
+      border-radius: 24px;
+      padding: 20px;
+      width: min(340px, 96vw);
+      box-shadow:
+        0 2px 0 rgba(255,255,255,0.04) inset,
+        0 -2px 0 rgba(0,0,0,0.3) inset,
+        0 30px 80px rgba(0,0,0,0.4),
+        0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    /* =============================================
+       DISPLAY
+    ============================================= */
+    .display {
+      background: var(--display-bg);
+      border-radius: var(--radius);
+      padding: 16px 20px 14px;
+      margin-bottom: 16px;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    /* Expressão anterior (acima) */
+    .display .expr {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      min-height: 1.2rem;
+      word-break: break-all;
+      text-align: right;
+      transition: opacity 0.2s;
+    }
+
+    /* Número atual (grande) */
+    .display .current {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(1.9rem, 8vw, 2.6rem);
+      font-weight: 500;
+      color: var(--text-disp);
+      word-break: break-all;
+      text-align: right;
+      line-height: 1.15;
+      transition: font-size 0.15s;
+      letter-spacing: -0.02em;
+    }
+
+    /* Cursor piscando */
+    .display .current::after {
+      content: '|';
+      opacity: 0;
+      animation: blink-cursor 1s step-start infinite;
+      color: var(--op);
+      font-weight: 300;
+      margin-left: 2px;
+    }
+    @keyframes blink-cursor {
+      0%,100%{ opacity:0 } 50%{ opacity:1 }
+    }
+
+    /* =============================================
+       GRADE DE BOTÕES
+    ============================================= */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    /* ---- Botão base ---- */
+    .btn {
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      height: clamp(56px, 13vw, 68px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: transform 0.08s, filter 0.1s;
+      /* Efeito 3D */
+      box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 6px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .btn:hover { filter: brightness(1.12); }
+
+    /* Variantes */
+    .btn.num {
+      background: linear-gradient(180deg, #454038 0%, var(--num) 100%);
+      color: var(--text-btn);
+    }
+    .btn.num:active { background: linear-gradient(180deg, var(--num) 0%, #2d2a26 100%); }
+
+    .btn.op {
+      background: linear-gradient(180deg, #d48e42 0%, var(--op) 100%);
+      color: #fff8f0;
+    }
+    .btn.op:active { background: linear-gradient(180deg, var(--op) 0%, #a56a28 100%); }
+
+    .btn.special {
+      background: linear-gradient(180deg, #7a6f65 0%, var(--special) 100%);
+      color: #f0ece6;
+      font-size: clamp(0.8rem, 3vw, 0.95rem);
+    }
+    .btn.special:active { background: linear-gradient(180deg, var(--special) 0%, #554e48 100%); }
+
+    .btn.eq {
+      background: linear-gradient(180deg, #f09050 0%, var(--eq) 100%);
+      color: #fff;
+      font-size: 1.4rem;
+    }
+    .btn.eq:active { background: linear-gradient(180deg, var(--eq) 0%, #b85e28 100%); }
+
+    /* Zero ocupa 2 colunas */
+    .btn.zero { grid-column: span 2; justify-content: flex-start; padding-left: 26px; }
+
+    /* =============================================
+       HISTÓRICO
+    ============================================= */
+    .history {
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 12px 16px;
+      width: min(340px, 96vw);
+      max-height: 140px;
+      overflow-y: auto;
+    }
+
+    .history-title {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .history-item {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--num);
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .history-item .h-expr { color: var(--special); }
+    .history-item .h-res  { font-weight: 500; }
+
+    /* scrollbar discreta */
+    .history::-webkit-scrollbar { width: 4px; }
+    .history::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+
+    /* =============================================
+       ANIMAÇÃO DE RESULTADO
+    ============================================= */
+    @keyframes flash-result {
+      0%   { color: var(--eq); }
+      100% { color: var(--text-disp); }
+    }
+
+    .current.flash { animation: flash-result 0.4s ease-out; }
+
+    /* =============================================
+       RESPONSIVO
+    ============================================= */
+    @media (max-width: 380px) {
+      .calculator { padding: 14px; }
+      .buttons { gap: 7px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calc-wrapper">
+    <div class="calc-title">Calculadora</div>
+
+    <div class="calculator">
+      <!-- Display -->
+      <div class="display">
+        <div class="expr"    id="expr"></div>
+        <div class="current" id="current">0</div>
+      </div>
+
+      <!-- Botões -->
+      <div class="buttons">
+        <!-- Linha 1: especiais + divisão -->
+        <button class="btn special" data-action="clear">AC</button>
+        <button class="btn special" data-action="sign">+/−</button>
+        <button class="btn special" data-action="percent">%</button>
+        <button class="btn op"      data-action="op" data-op="÷">÷</button>
+
+        <!-- Linha 2 -->
+        <button class="btn num" data-action="digit" data-val="7">7</button>
+        <button class="btn num" data-action="digit" data-val="8">8</button>
+        <button class="btn num" data-action="digit" data-val="9">9</button>
+        <button class="btn op"  data-action="op" data-op="×">×</button>
+
+        <!-- Linha 3 -->
+        <button class="btn num" data-action="digit" data-val="4">4</button>
+        <button class="btn num" data-action="digit" data-val="5">5</button>
+        <button class="btn num" data-action="digit" data-val="6">6</button>
+        <button class="btn op"  data-action="op" data-op="−">−</button>
+
+        <!-- Linha 4 -->
+        <button class="btn num" data-action="digit" data-val="1">1</button>
+        <button class="btn num" data-action="digit" data-val="2">2</button>
+        <button class="btn num" data-action="digit" data-val="3">3</button>
+        <button class="btn op"  data-action="op" data-op="+">+</button>
+
+        <!-- Linha 5 -->
+        <button class="btn num zero" data-action="digit" data-val="0">0</button>
+        <button class="btn num"      data-action="dot">.</button>
+        <button class="btn eq"       data-action="equals">=</button>
+      </div>
+    </div>
+
+    <!-- Histórico de operações -->
+    <div class="history">
+      <div class="history-title">Histórico</div>
+      <div class="history-list" id="history-list">
+        <div class="history-item" style="color:#b0a898;font-size:0.75rem;">Nenhuma operação ainda</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* =============================================
+     ESTADO DA CALCULADORA
+  ============================================= */
+  let displayValue   = '0';   // o que aparece no display grande
+  let storedValue    = null;  // primeiro operando
+  let currentOp      = null;  // operador pendente: +, −, ×, ÷
+  let shouldReplace   = false; // próximo dígito substitui o display
+  let history        = [];    // array de { expr, result }
+
+  /* =============================================
+     REFERÊNCIAS
+  ============================================= */
+  const currentEl     = document.getElementById('current');
+  const exprEl        = document.getElementById('expr');
+  const historyListEl = document.getElementById('history-list');
+
+  /* =============================================
+     RENDERIZAÇÃO
+  ============================================= */
+  function updateDisplay() {
+    // Formata número com separador de milhar, sem exceder 12 chars
+    let num = parseFloat(displayValue);
+    let txt = displayValue;
+
+    // Limita comprimento
+    if (txt.length > 12) {
+      // tenta notação exponencial
+      txt = parseFloat(txt).toPrecision(8).replace(/\.?0+$/, '');
+    }
+
+    currentEl.textContent = txt;
+
+    // Reduz fonte se muito longo
+    const len = txt.length;
+    if (len > 10)      currentEl.style.fontSize = 'clamp(1.2rem,5vw,1.6rem)';
+    else if (len > 7)  currentEl.style.fontSize = 'clamp(1.5rem,6vw,2rem)';
+    else               currentEl.style.fontSize = '';
+  }
+
+  function flashResult() {
+    currentEl.classList.remove('flash');
+    void currentEl.offsetWidth; // reflow
+    currentEl.classList.add('flash');
+  }
+
+  /* =============================================
+     AÇÕES
+  ============================================= */
+  function inputDigit(d) {
+    if (shouldReplace) {
+      displayValue = d;
+      shouldReplace = false;
+    } else {
+      if (displayValue === '0' && d !== '.') displayValue = d;
+      else if (displayValue.length < 12)     displayValue += d;
+    }
+    updateDisplay();
+  }
+
+  function inputDot() {
+    if (shouldReplace) { displayValue = '0.'; shouldReplace = false; updateDisplay(); return; }
+    if (!displayValue.includes('.')) displayValue += '.';
+    updateDisplay();
+  }
+
+  function inputOp(op) {
+    const current = parseFloat(displayValue);
+    if (storedValue !== null && !shouldReplace) {
+      // Encadeia operações sem pressionar =
+      const result = compute(storedValue, current, currentOp);
+      displayValue = formatResult(result);
+      storedValue  = result;
+    } else {
+      storedValue = current;
+    }
+    currentOp    = op;
+    shouldReplace = true;
+    exprEl.textContent = formatResult(storedValue) + ' ' + op;
+    updateDisplay();
+  }
+
+  function inputEquals() {
+    if (storedValue === null || currentOp === null) return;
+    const current = parseFloat(displayValue);
+    const expr    = `${formatResult(storedValue)} ${currentOp} ${formatResult(current)}`;
+    const result  = compute(storedValue, current, currentOp);
+    const resStr  = formatResult(result);
+
+    displayValue  = resStr;
+    exprEl.textContent = expr + ' =';
+    storedValue   = null;
+    currentOp     = null;
+    shouldReplace  = true;
+
+    updateDisplay();
+    flashResult();
+    addHistory(expr, resStr);
+  }
+
+  function compute(a, b, op) {
+    switch (op) {
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b !== 0 ? a / b : NaN;
+      default:  return b;
+    }
+  }
+
+  function formatResult(n) {
+    if (isNaN(n)) return 'Erro';
+    if (!isFinite(n)) return 'Erro';
+    // Remove casas decimais desnecessárias
+    let s = parseFloat(n.toPrecision(10)).toString();
+    return s;
+  }
+
+  function clearAll() {
+    displayValue  = '0';
+    storedValue   = null;
+    currentOp     = null;
+    shouldReplace  = false;
+    exprEl.textContent = '';
+    updateDisplay();
+  }
+
+  function toggleSign() {
+    if (parseFloat(displayValue) === 0) return;
+    displayValue = (parseFloat(displayValue) * -1).toString();
+    updateDisplay();
+  }
+
+  function applyPercent() {
+    displayValue = (parseFloat(displayValue) / 100).toString();
+    updateDisplay();
+  }
+
+  /* =============================================
+     HISTÓRICO
+  ============================================= */
+  function addHistory(expr, result) {
+    history.unshift({ expr, result });
+    if (history.length > 20) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    historyListEl.innerHTML = '';
+    if (history.length === 0) {
+      historyListEl.innerHTML = '<div style="color:#b0a898;font-size:0.75rem;">Nenhuma operação ainda</div>';
+      return;
+    }
+    history.forEach(({ expr, result }) => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `<span class="h-expr">${expr}</span><span class="h-res">${result}</span>`;
+      // Clicar no histórico coloca o resultado no display
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', () => {
+        displayValue  = result;
+        shouldReplace  = true;
+        storedValue   = null;
+        currentOp     = null;
+        exprEl.textContent = '';
+        updateDisplay();
+      });
+      historyListEl.appendChild(item);
+    });
+  }
+
+  /* =============================================
+     EVENTOS DOS BOTÕES
+  ============================================= */
+  document.querySelector('.buttons').addEventListener('click', e => {
+    const btn = e.target.closest('.btn');
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    switch (action) {
+      case 'digit':   inputDigit(btn.dataset.val); break;
+      case 'dot':     inputDot();                   break;
+      case 'op':      inputOp(btn.dataset.op);      break;
+      case 'equals':  inputEquals();                break;
+      case 'clear':   clearAll();                   break;
+      case 'sign':    toggleSign();                 break;
+      case 'percent': applyPercent();               break;
+    }
+  });
+
+  /* =============================================
+     TECLADO FÍSICO
+  ============================================= */
+  document.addEventListener('keydown', e => {
+    const k = e.key;
+    if (k >= '0' && k <= '9') { inputDigit(k); highlight(k); }
+    else if (k === '.')   { inputDot(); }
+    else if (k === '+')   { inputOp('+'); }
+    else if (k === '-')   { inputOp('−'); }
+    else if (k === '*')   { inputOp('×'); }
+    else if (k === '/')   { e.preventDefault(); inputOp('÷'); }
+    else if (k === 'Enter' || k === '=') { inputEquals(); }
+    else if (k === 'Escape' || k === 'c' || k === 'C') { clearAll(); }
+    else if (k === 'Backspace') {
+      // Apaga último dígito
+      if (!shouldReplace && displayValue.length > 1) {
+        displayValue = displayValue.slice(0, -1);
+        if (displayValue === '-') displayValue = '0';
+        updateDisplay();
+      } else {
+        displayValue = '0';
+        shouldReplace = false;
+        updateDisplay();
+      }
+    }
+  });
+
+  /* destaca botão correspondente ao teclado */
+  function highlight(val) {
+    const btn = document.querySelector(`[data-val="${val}"]`);
+    if (!btn) return;
+    btn.style.filter = 'brightness(1.4)';
+    setTimeout(() => { btn.style.filter = ''; }, 120);
+  }
+
+  /* =============================================
+     INIT
+  ============================================= */
+  updateDisplay();
+</script>
+</body>
+</html>
